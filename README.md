@@ -8,6 +8,69 @@ Git Worktree と Claude Code を組み合わせて、**3つの機能を同時並
 - Claude Code (`claude`) がインストールされていること
 - モダンブラウザ（Chrome, Firefox, Edge 等）
 
+## Git Worktree とは
+
+### 概要
+
+Git Worktree は、**1つのリポジトリから複数の作業ディレクトリを同時に持てる** Git の機能です。
+通常は1つのディレクトリで1つのブランチしか扱えませんが、Worktree を使えば複数のブランチを別々のディレクトリに展開し、同時に作業できます。
+
+### 通常のブランチ切り替えとの違い
+
+| 方法 | 動作 | 同時作業 |
+|---|---|---|
+| `git switch` / `git checkout` | 1つのディレクトリ内でブランチを切り替える | ❌ 1ブランチのみ |
+| `git worktree add` | 別ディレクトリにブランチを展開する | ✅ 複数ブランチで同時作業可能 |
+
+### ディレクトリ構成のイメージ
+
+Worktree を作成すると、以下のようなディレクトリ構成になります。
+
+```
+Ks/Project/
+├── git-worktree-sample/          ← メインworktree (main ブランチ)
+│   ├── .git/
+│   ├── index.html
+│   ├── css/
+│   └── js/
+├── worktree-calculator/          ← worktree (feature/calculator ブランチ)
+│   ├── .git  (ファイル: メインの .git/ を参照)
+│   ├── index.html
+│   ├── css/
+│   └── js/
+├── worktree-color-picker/        ← worktree (feature/color-picker ブランチ)
+│   └── ...
+└── worktree-unit-converter/      ← worktree (feature/unit-converter ブランチ)
+    └── ...
+```
+
+> 各 worktree は独立したディレクトリですが、**リポジトリの履歴やオブジェクトはメインの `.git/` を共有**しています。
+
+### Claude Code との組み合わせ
+
+各 worktree ディレクトリで独立した Claude Code セッションを起動できます。
+それぞれの Claude Code は**別ブランチ・別ディレクトリで同時に作業**するため、互いに干渉せず並列で機能開発が可能です。
+
+```
+ターミナル1                    ターミナル2                    ターミナル3
+worktree-calculator/          worktree-color-picker/        worktree-unit-converter/
+$ claude                      $ claude                      $ claude
+ → 電卓を実装中...              → カラーピッカーを実装中...      → 単位変換を実装中...
+```
+
+### 基本コマンド
+
+| コマンド | 説明 |
+|---|---|
+| `git worktree add <path> -b <branch>` | 現在のブランチを起点に新しいブランチを作成して worktree を展開 |
+| `git worktree add <path> -b <branch> <base>` | 指定したベースブランチ（例: `main`, `develop`）を起点に新しいブランチを作成して worktree を展開 |
+| `git worktree add <path> <existing-branch>` | 既存ブランチで worktree を作成 |
+| `git worktree list` | 現在の worktree 一覧を表示 |
+| `git worktree remove <path>` | worktree を削除 |
+| `git worktree prune` | 無効な worktree 参照をクリーンアップ。worktree のディレクトリを手動で削除した場合など、実体が存在しないのに `.git/worktrees/` に参照が残っている状態を解消する。`git worktree remove` で正しく削除した場合は不要 |
+
+---
+
 ## ハンズオン手順
 
 ### Step 1: クローン & ベースアプリ確認
